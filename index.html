@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canavar Avı</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="css/foundation.min.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+    <section class="row">
+        <div class="small-6 columns">
+            <h1 class="text-center">Player</h1>
+            <div class="healthbar">
+                <div :style="{ width : player_heal +'%' }" class="healthbar text-center" style="background-color: green; margin: 0; color: white;">
+                    {{ player_heal }} %
+                </div>
+            </div>
+        </div>
+        <div class="small-6 columns">
+            <h1 class="text-center">Monster</h1>
+            <div class="healthbar">
+                <div :style="{ width : monster_heal +'%' }" class="healthbar text-center" style="background-color: green; margin: 0; color: white;">
+                    {{ monster_heal }} %
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="row controls" v-if="!game_is_on">
+        <div class="small-12 columns">
+            <button id="start-game" @click="start_game">NEW GAME</button>
+        </div>
+    </section>
+    <section class="row controls" v-if="game_is_on">
+        <div class="small-12 columns">
+            <button id="attack" @click="attack">ATTACK</button>
+            <button id="special-attack" @click="special_attack">ULTIMATE</button>
+            <button id="heal" @click="heal_up">HEAL</button>
+            <button id="give-up" @click="surrender">SURRENDER</button>
+        </div>
+    </section>
+    <section class="row log" v-if="logs.length >0 ">
+        <div class="small-12 columns">
+            <ul>
+                <li :class="{ 'player-turn' : log.turn =='p','monster-turn' : log.turn =='m' }" v-for=" log in logs ">{{ log.text }} 
+                </li>
+            </ul>
+        </div>
+    </section>
+</div>
+</body>
+<script>
+    new Vue({
+        el : "#app",
+        data : {
+            player_heal : 100,
+            monster_heal : 100,
+            game_is_on : false,
+            attack_multiple : 10,
+            special_attack_multiple : 20,
+            heal_up_multiple : 10,
+            monster_attack_multiple : 15,
+            logs : [],
+            log_text : {
+                attack : "Monster is attacked : ",
+                special_attack : 'Waowww Its Ultimate : ',
+                heal_up : "Heal up man : ",
+                monster_attack : "Monster Attacked You : "
+            }
+        },
+        methods : {
+            start_game : function(){
+                this.game_is_on = true
+            },
+            attack : function(){
+                var point = Math.ceil(Math.random() * this.attack_multiple)
+                this.monster_heal -= point
+                this.add_to_log({ turn : "p" , text: this.log_text.attack + point })
+                this.monster_attack();
+               
+            },
+            special_attack : function(){
+                var point = Math.ceil(Math.random() * this.special_attack_multiple)
+                this.monster_heal -= point
+                this.add_to_log({ turn : "p" , text: this.log_text.special_attack + point})
+                this.monster_attack();
+            }
+            ,heal_up : function(){
+                var point = Math.ceil(Math.random() * this.heal_up_multiple)
+                this.player_heal += point
+                this.add_to_log({ turn : "p" , text : this.log_text.heal_up + point })
+                this.monster_attack();
+                
+            },
+            surrender : function(){
+                this.player_heal = 0
+
+            },
+            monster_attack(){
+                var point = Math.ceil(Math.random() * this.monster_attack_multiple)
+                this.add_to_log({ turn : "m" , text: this.log_text.monster_attack + point })
+                this.player_heal -= point
+            },
+            add_to_log : function(log){
+                this.logs.push(log)
+            }
+        },
+        watch : {
+            player_heal : function(value){
+                if(value <= 0){
+                    this.player_heal = 0;
+                    if(confirm("You Lost! Do You want try again?")){
+                        this.player_heal = 100;
+                        this.monster_heal = 100;
+                        this.logs =[]
+                    }
+                } else if(value >= 100){
+                    this.player_heal = 100
+                }
+            },
+            monster_heal : function(value){
+                if(value <= 0){
+                    this.monster_heal = 0;
+                    if(confirm("You WON! Do You want try again?")){
+                        this.player_heal = 100;
+                        this.monster_heal = 100;
+                        this.logs =[]
+                    }
+                } else if(value >= 100){
+                    this.monster_heal = 100
+                }
+            }
+        }
+    })
+</script>
+</html>
